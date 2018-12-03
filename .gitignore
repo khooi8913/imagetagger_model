@@ -77,3 +77,5 @@ confusables.json
 # VS Code stuff
 .vscode
 *.code-workspace
+
+src
