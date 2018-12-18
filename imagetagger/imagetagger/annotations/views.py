@@ -1,5 +1,6 @@
 import datetime
 import json
+from utils.clean_gps import get_exif_location
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -36,6 +37,9 @@ def annotate(request, image_id):
     selected_image = get_object_or_404(Image, id=image_id)
     if selected_image is not None:
         selected_image.metadata = json.loads(selected_image.metadata)
+        # Replace the cleaned gps (imdad - not yet tested)
+        lat, lon = get_exif_location(selected_image.metadata)
+        selected_image.metadata['GPSInfo'] = 'Latitude: {}, Longtitude: {}'.format(lat, lon)
     imageset_perms = selected_image.image_set.get_perms(request.user)
     if 'read' in imageset_perms:
         set_images = selected_image.image_set.images.all().order_by('name')
@@ -639,9 +643,13 @@ def load_annotations(request) -> Response:
             'request': request,
         },
         many=True)
+    # cleand gps data (imdad - not yet tested)
+    metadata = json.loads(image.metadata)
+    lat, lon = get_exif_location(metadata)
+    metadata['GPSInfo'] = 'Latitude: {}, Longtitude: {}'.format(lat, lon)
     return Response({
         'annotations': serializer.data,
-        'metadata': json.loads(image.metadata)
+        'metadata': metadata
     }, status=HTTP_200_OK)
 
 
