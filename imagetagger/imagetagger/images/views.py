@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN, HTTP_200_OK, \
     HTTP_201_CREATED, HTTP_202_ACCEPTED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 from PIL import Image as PIL_Image
-from PIL.ExifTags import TAGS
+from PIL.ExifTags import TAGS, GPSTAGS
 
 from imagetagger.images.serializers import ImageSetSerializer, ImageSerializer, SetTagSerializer
 from imagetagger.images.forms import ImageSetCreationForm, ImageSetCreationFormWT, ImageSetEditForm, ImageMetadataForm
@@ -33,6 +33,7 @@ from .forms import LabelUploadForm
 from imagetagger.annotations.models import Annotation, Export, ExportFormat, \
     AnnotationType, Verification
 from imagetagger.tagger_messages.models import Message, TeamMessage, GlobalMessage
+from imagetagger.utils.clean_gps import get_lat_lon
 
 import os
 import shutil
@@ -209,6 +210,15 @@ def upload_image(request, imageset_id):
         if img._getexif() is not None:
             for (tag, value) in img._getexif().items():
                 metadata[TAGS.get(tag)] = value
+            # imdad added
+            gpsinfo = {}
+            for key in metadata['GPSInfo'].keys():
+                decode = GPSTAGS.get(key, key)
+                gpsinfo[decode] = metadata['GPSInfo'][key]
+            lat, lon = get_lat_lon(gpsinfo)
+            alt = gpsinfo['GPSAltitude'][0] / gpsinfo['GPSAltitude'][1]
+            metadata['GPSInfo'] = 'Latitude: {}, Longtitude: {}, Altitude: {}m'.format(lat, lon, alt)
+            ###
         return json.dumps(metadata, default=str)
     
     imageset = get_object_or_404(ImageSet, id=imageset_id)
@@ -274,7 +284,7 @@ def upload_image(request, imageset_id):
                                     with PIL_Image.open(file_path) as image:
                                         width, height = image.size
                                         # extracting metadata info
-                                        metadata = extract_metadata(image_file)
+                                        metadata = extract_metadata(image)
                                     file_new_path = os.path.join(imageset.root_path(), img_fname)
                                     shutil.move(file_path, file_new_path)
                                     shutil.chown(file_new_path, group=settings.UPLOAD_FS_GROUP)
