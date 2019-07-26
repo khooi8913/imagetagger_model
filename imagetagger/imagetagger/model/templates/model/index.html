@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+
+{% load widget_tweaks %}
+
+{% block bodyblock %}
+    <div class="container-fluid">
+        <div class="col">
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h2 class="panel-title">
+                                Upload
+                            </h2>
+                        </div>
+                        <div class="panel-body">
+                            <form method="post" enctype="multipart/form-data" action="{% url 'model:upload_model_image' %}">
+                                {% csrf_token %}
+{#                                {{ model_upload_form }}#}
+                                {# <input type="hidden" name="team" value="{{ team.id }}">#}
+                                <div class="form-group">
+                                    <label for="id_image">{{ model_upload_form.image.label }}</label>
+                                    {% render_field model_upload_form.image class+='form-control' placeholder=model_upload_form.image.label %}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_model">{{ model_upload_form.model.label }}</label>
+                                    {% render_field model_upload_form.model class+='form-control' placeholder=model_upload_form.model.label %}
+                                </div>
+                                <input class="btn btn-primary" type="submit" value="Upload">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h2 class="panel-title">
+                                Preview
+                            </h2>
+                        </div>
+                        <div class="panel-body">
+                            {% if preview_image is not None %}
+                                <img src="{{ preview_image }}"/>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

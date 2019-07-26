@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'imagetagger.users',
     'imagetagger.tools',
     'imagetagger.administration',
+    'imagetagger.model',
     'django.contrib.admin',
     'imagetagger.tagger_messages',
     'django.contrib.auth',

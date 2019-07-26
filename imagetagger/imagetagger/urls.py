@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^users/', include('imagetagger.users.urls')),
     url(r'^tagger_messages/', include('imagetagger.tagger_messages.urls')),
     url(r'^tools/', include('imagetagger.tools.urls')),
+    url(r'^model/', include('imagetagger.model.urls')),
 ]
 
 
