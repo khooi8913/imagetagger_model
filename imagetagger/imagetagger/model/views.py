@@ -4,8 +4,10 @@ from django.views.decorators.http import require_POST
 
 from imagetagger.model.forms import ModelUploadForm
 
+from imagetagger.model.utils import process_prediction, makeb64image
 
-def respond(request, image=None, error=None):
+
+def _create_respond(request, image=None, error=None):
     return TemplateResponse(request, 'model/index.html', {
         'model_upload_form': ModelUploadForm(),
         'preview_image': image,
@@ -15,7 +17,7 @@ def respond(request, image=None, error=None):
 
 @login_required
 def index(request):
-    return respond(request)
+    return _create_respond(request)
 
 
 @login_required
@@ -25,9 +27,13 @@ def upload_model_image(request):
     image = None
     error = None
     if form.is_valid():
-        # make prediction and output the image
-        image = "/static/symbols/logo.png"
+        # return the output image after the prediction
+        savedimgfile = process_prediction(request.FILES['image'],
+                                   request.FILES['model'])
+        # instad of saving the image at the moment,
+        # it will be returned as base64 image src
+        image = makeb64image(savedimgfile)
     else:
         error = form.errors
 
-    return respond(request, image=image, error=error)
+    return _create_respond(request, image=image, error=error)
