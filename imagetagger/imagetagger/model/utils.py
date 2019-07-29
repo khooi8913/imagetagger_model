@@ -12,14 +12,16 @@ alpha = 0.4
 mean = (0.485, 0.456, 0.406)
 std = (0.229, 0.224, 0.225)
 
+# added "not" to use cpu if a gpu is present
 
 def buildmodel(modelfile):
-    model = torch.load(modelfile, map_location='cpu')
-    # if torch.cuda.is_available():
-    #     torch.cuda.empty_cache()
-    #     model = torch.load(modelfile)
-    # else:
-    #     model = torch.load(modelfile, map_location='cpu')
+    # model = torch.load(modelfile, map_location='cpu')
+    # "not" added here
+    if not torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        model = torch.load(modelfile)
+    else:
+        model = torch.load(modelfile, map_location='cpu')
     return model
 
 
@@ -39,15 +41,17 @@ def make_prediction(image, target_size, batch_size, model):
         batch_x = FT(batch_x)
         with torch.no_grad():
             batch_y = model(batch_x)
-        # if torch.cuda.is_available():
-        #     with torch.cuda.device(0):
-        #         batch_x = batch_x.cuda()
-        #         with torch.no_grad():
-        #             batch_y = model(batch_x)
-        #             # batch_y=Sig(batch_y)
-        # else:
-        #     with torch.no_grad():
-        #         batch_y = model(batch_x)
+
+        # temporarily added "not" if you have a GPU
+        if not torch.cuda.is_available():
+            with torch.cuda.device(0):
+                batch_x = batch_x.cuda()
+                with torch.no_grad():
+                    batch_y = model(batch_x)
+                    # batch_y=Sig(batch_y)
+        else:
+            with torch.no_grad():
+                batch_y = model(batch_x)
         batch_y = batch_y.argmax(dim=1)
         batch_y = batch_y.cpu().numpy()
 
@@ -115,7 +119,7 @@ def process_prediction(image, modelfile):
 
     # read the image and setup colors
     img = mmcv.imread(filename)
-    cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # run prediction
     print("DEBUG", "starting prediction")
